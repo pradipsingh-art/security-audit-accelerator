@@ -41,8 +41,18 @@ if (process.env.K_SERVICE) {
   prisma = new PrismaClient();
 }
 
-// Middleware
-app.use(cors());
+// Middleware - Configure CORS for Cloud Run
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://security-audit-accelerator-frontend-196053730058.asia-south1.run.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.options('*', cors()); // Handle preflight requests
 app.use(express.json());
 
 const storage = multer.memoryStorage();

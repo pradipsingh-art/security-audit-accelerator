@@ -16,8 +16,9 @@ RUN npm install
 # Copy Prisma schema
 COPY prisma ./prisma/
 
-# Generate Prisma Client explicitly for the Debian environment
+# Generate Prisma Client explicitly for the Debian environment & create a local DB file in the image
 RUN npx prisma generate
+RUN npx prisma db push --accept-data-loss
 
 # Copy the rest of the application
 COPY . .

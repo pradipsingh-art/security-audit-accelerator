@@ -4,7 +4,7 @@
   "description": "Backend API for Security Audit Dashboard",
   "main": "server.js",
   "scripts": {
-    "start": "npx prisma generate && npx prisma db push --accept-data-loss && node server.js",
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {

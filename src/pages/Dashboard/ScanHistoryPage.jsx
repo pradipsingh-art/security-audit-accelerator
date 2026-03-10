@@ -5,7 +5,7 @@ import Card from '../../components/Card/Card';
 const ScanHistoryPage = () => {
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filtering & Pagination State
   const [selectedProvider, setSelectedProvider] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +17,7 @@ const ScanHistoryPage = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('auditscope_token');
-        const res = await fetch(`http://localhost:5000/api/projects/all/scans`, {
+        const res = await fetch(`https://security-audit-accelerator-backend-196053730058.asia-south1.run.appapi/projects/all/scans`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -37,7 +37,7 @@ const ScanHistoryPage = () => {
 
     // Apply Provider Filter
     if (selectedProvider !== 'All') {
-      filtered = filtered.filter(scan => 
+      filtered = filtered.filter(scan =>
         scan.project?.provider?.toLowerCase() === selectedProvider.toLowerCase()
       );
     }
@@ -112,8 +112,8 @@ const ScanHistoryPage = () => {
             <div style={{ fontSize: '2.5rem', opacity: 0.5 }}>⏱️</div>
             <h3 style={{ color: 'var(--color-text)' }}>No scans found</h3>
             <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
-              {selectedProvider !== 'All' 
-                ? `No scan history matching the ${selectedProvider.toUpperCase()} provider filter.` 
+              {selectedProvider !== 'All'
+                ? `No scan history matching the ${selectedProvider.toUpperCase()} provider filter.`
                 : 'Run a multi-cloud security scan to see your history here!'}
             </p>
           </Card>

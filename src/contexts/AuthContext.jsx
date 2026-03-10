@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('auditscope_token');
     const savedUser = localStorage.getItem('auditscope_user');
-    
+
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -19,15 +19,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://security-audit-accelerator-backend-196053730058.asia-south1.run.appapi/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Login failed');
-      
+
       localStorage.setItem('auditscope_token', data.token);
       localStorage.setItem('auditscope_user', JSON.stringify(data.user));
       setUser(data.user);
@@ -39,15 +39,15 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('https://security-audit-accelerator-backend-196053730058.asia-south1.run.appapi/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
-      
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Registration failed');
-      
+
       localStorage.setItem('auditscope_token', data.token);
       localStorage.setItem('auditscope_user', JSON.stringify(data.user));
       setUser(data.user);

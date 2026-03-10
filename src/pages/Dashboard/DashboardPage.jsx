@@ -9,7 +9,7 @@ const DashboardPage = () => {
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailInput, setEmailInput] = useState('');
-  
+
   // Filtering and Pagination State
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('All');
@@ -44,15 +44,15 @@ const DashboardPage = () => {
   // Compute filtered and paginated results
   const processedData = useMemo(() => {
     if (!scanData || !scanData.vulnerabilities) return { items: [], totalPages: 0 };
-    
+
     let filtered = scanData.vulnerabilities;
 
     // Apply Service Filter (from Navbar)
     if (serviceFilter !== 'all') {
       filtered = filtered.filter(v => {
-         const match = v.resource.match(/^([^(]+)/);
-         const sName = match ? match[1].trim() : 'Other';
-         return sName === serviceFilter;
+        const match = v.resource.match(/^([^(]+)/);
+        const sName = match ? match[1].trim() : 'Other';
+        return sName === serviceFilter;
       });
     }
 
@@ -64,9 +64,9 @@ const DashboardPage = () => {
     // Apply Search Filter (searches resource name, ID, or issue description)
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(v => 
-        v.resource.toLowerCase().includes(lowerTerm) || 
-        v.id.toLowerCase().includes(lowerTerm) || 
+      filtered = filtered.filter(v =>
+        v.resource.toLowerCase().includes(lowerTerm) ||
+        v.id.toLowerCase().includes(lowerTerm) ||
         v.issue.toLowerCase().includes(lowerTerm)
       );
     }
@@ -106,7 +106,7 @@ const DashboardPage = () => {
     setReportStatus('downloading');
     try {
       const token = localStorage.getItem('auditscope_token');
-      const res = await fetch('http://localhost:5000/api/reports/download', {
+      const res = await fetch('https://security-audit-accelerator-backend-196053730058.asia-south1.run.appapi/reports/download', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ const DashboardPage = () => {
     setReportStatus('sending');
     try {
       const token = localStorage.getItem('auditscope_token');
-      const res = await fetch('http://localhost:5000/api/reports/send', {
+      const res = await fetch('https://security-audit-accelerator-backend-196053730058.asia-south1.run.appapi/reports/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,11 +198,11 @@ const DashboardPage = () => {
                   boxShadow: '0 2px 8px rgba(6, 182, 212, 0.3)'
                 }}
               >
-                {reportStatus === 'downloading' ? '⏳ Downloading...' : 
-                 reportStatus === 'sending' ? '⏳ Sending Email...' : 
-                 reportStatus === 'sent' ? '✅ Action Successful!' : 
-                 reportStatus === 'error' ? '❌ Failed' : 
-                 '📄 Report ▾'}
+                {reportStatus === 'downloading' ? '⏳ Downloading...' :
+                  reportStatus === 'sending' ? '⏳ Sending Email...' :
+                    reportStatus === 'sent' ? '✅ Action Successful!' :
+                      reportStatus === 'error' ? '❌ Failed' :
+                        '📄 Report ▾'}
               </button>
 
               {reportMenuOpen && (
@@ -219,7 +219,7 @@ const DashboardPage = () => {
                   zIndex: 100,
                   overflow: 'hidden'
                 }}>
-                  <button 
+                  <button
                     onClick={handleDownloadReport}
                     style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderBottom: '1px solid #2d3148', color: 'var(--color-text)', textAlign: 'left', cursor: 'pointer', fontSize: 'var(--font-size-sm)', display: 'flex', gap: '8px', alignItems: 'center' }}
                     onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
@@ -227,7 +227,7 @@ const DashboardPage = () => {
                   >
                     <span>⬇️</span> Download PDF
                   </button>
-                  <button 
+                  <button
                     onClick={() => { setReportMenuOpen(false); setEmailModalOpen(true); }}
                     style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: 'var(--color-text)', textAlign: 'left', cursor: 'pointer', fontSize: 'var(--font-size-sm)', display: 'flex', gap: '8px', alignItems: 'center' }}
                     onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
@@ -246,76 +246,76 @@ const DashboardPage = () => {
             {/* Extremely compact metrics overview */}
             <Section style={{ padding: 0, marginBottom: 'var(--spacing-6)' }} darker={false}>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)', gap: 'var(--spacing-3)' }}>
-                 <Card style={{ padding: 'var(--spacing-3)' }}>
-                   <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Score</h3>
-                   <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: scanData.score > 80 ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                      {scanData.score}%
-                   </div>
-                 </Card>
-                 <Card style={{ padding: 'var(--spacing-3)' }}>
-                   <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Vulnerabilities</h3>
-                   <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: scanData.vulnerabilities.length > 0 ? 'var(--color-danger)' : 'var(--color-text)' }}>
-                      {scanData.vulnerabilities.length}
-                   </div>
-                 </Card>
-                 <Card style={{ padding: 'var(--spacing-3)' }}>
-                   <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Resources</h3>
-                   <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800 }}>
-                      {scanData.scanned}
-                   </div>
-                 </Card>
-                 <Card style={{ padding: 'var(--spacing-3)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    {/* Compact Filter Controls inside a metric-sized card to save vertical space */}
-                    <div style={{ display: 'flex', gap: 'var(--spacing-2)', height: '100%' }}>
-                      <input 
-                        type="text" 
-                        placeholder="Search resources, IDs, or issues..." 
-                        value={searchTerm}
-                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                        style={{ 
-                          flex: 1, 
-                          backgroundColor: 'var(--color-background-dark)', 
-                          border: '1px solid var(--color-border)', 
-                          borderRadius: '4px', 
-                          padding: '0 var(--spacing-2)',
-                          color: 'var(--color-text)',
-                          fontSize: 'var(--font-size-sm)'
-                        }}
-                      />
-                      <select 
-                        value={severityFilter}
-                        onChange={(e) => { setSeverityFilter(e.target.value); setCurrentPage(1); }}
-                        style={{
-                          backgroundColor: 'var(--color-background-dark)', 
-                          border: '1px solid var(--color-border)', 
-                          borderRadius: '4px', 
-                          padding: '0 var(--spacing-2)',
-                          color: 'var(--color-text)',
-                          fontSize: 'var(--font-size-sm)',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option style={{backgroundColor: '#1a1a1a', color: '#ffffff'}} value="All">All Severities</option>
-                        <option style={{backgroundColor: '#1a1a1a', color: '#ef4444'}} value="Critical">Critical</option>
-                        <option style={{backgroundColor: '#1a1a1a', color: '#f97316'}} value="High">High</option>
-                        <option style={{backgroundColor: '#1a1a1a', color: '#eab308'}} value="Medium">Medium</option>
-                        <option style={{backgroundColor: '#1a1a1a', color: '#3b82f6'}} value="Low">Low</option>
-                      </select>
-                    </div>
-                 </Card>
+                <Card style={{ padding: 'var(--spacing-3)' }}>
+                  <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Score</h3>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: scanData.score > 80 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                    {scanData.score}%
+                  </div>
+                </Card>
+                <Card style={{ padding: 'var(--spacing-3)' }}>
+                  <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Vulnerabilities</h3>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: scanData.vulnerabilities.length > 0 ? 'var(--color-danger)' : 'var(--color-text)' }}>
+                    {scanData.vulnerabilities.length}
+                  </div>
+                </Card>
+                <Card style={{ padding: 'var(--spacing-3)' }}>
+                  <h3 style={{ fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-1)' }}>Resources</h3>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800 }}>
+                    {scanData.scanned}
+                  </div>
+                </Card>
+                <Card style={{ padding: 'var(--spacing-3)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  {/* Compact Filter Controls inside a metric-sized card to save vertical space */}
+                  <div style={{ display: 'flex', gap: 'var(--spacing-2)', height: '100%' }}>
+                    <input
+                      type="text"
+                      placeholder="Search resources, IDs, or issues..."
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                      style={{
+                        flex: 1,
+                        backgroundColor: 'var(--color-background-dark)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '4px',
+                        padding: '0 var(--spacing-2)',
+                        color: 'var(--color-text)',
+                        fontSize: 'var(--font-size-sm)'
+                      }}
+                    />
+                    <select
+                      value={severityFilter}
+                      onChange={(e) => { setSeverityFilter(e.target.value); setCurrentPage(1); }}
+                      style={{
+                        backgroundColor: 'var(--color-background-dark)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '4px',
+                        padding: '0 var(--spacing-2)',
+                        color: 'var(--color-text)',
+                        fontSize: 'var(--font-size-sm)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }} value="All">All Severities</option>
+                      <option style={{ backgroundColor: '#1a1a1a', color: '#ef4444' }} value="Critical">Critical</option>
+                      <option style={{ backgroundColor: '#1a1a1a', color: '#f97316' }} value="High">High</option>
+                      <option style={{ backgroundColor: '#1a1a1a', color: '#eab308' }} value="Medium">Medium</option>
+                      <option style={{ backgroundColor: '#1a1a1a', color: '#3b82f6' }} value="Low">Low</option>
+                    </select>
+                  </div>
+                </Card>
               </div>
             </Section>
-            
+
             {/* Dense Data Table */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-2)' }}>
-                <h2 style={{ fontSize: 'var(--font-size-base)', margin: 0 }}>Vulnerability Findings <span style={{color: 'var(--color-text-muted)', fontWeight: 400}}>({processedData.totalItems})</span></h2>
-                
+                <h2 style={{ fontSize: 'var(--font-size-base)', margin: 0 }}>Vulnerability Findings <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>({processedData.totalItems})</span></h2>
+
                 {/* Pagination Controls */}
                 {processedData.totalPages > 1 && (
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center', fontSize: 'var(--font-size-sm)' }}>
-                    <button 
-                      onClick={() => handlePageChange(currentPage - 1)} 
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       style={{ padding: '2px 8px', background: 'var(--color-background-light)', border: '1px solid var(--color-border)', borderRadius: '4px', color: currentPage === 1 ? 'var(--color-text-muted)' : 'var(--color-text)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
                     >
@@ -324,8 +324,8 @@ const DashboardPage = () => {
                     <span style={{ margin: '0 8px', color: 'var(--color-text-muted)' }}>
                       Page {currentPage} of {processedData.totalPages}
                     </span>
-                    <button 
-                      onClick={() => handlePageChange(currentPage + 1)} 
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === processedData.totalPages}
                       style={{ padding: '2px 8px', background: 'var(--color-background-light)', border: '1px solid var(--color-border)', borderRadius: '4px', color: currentPage === processedData.totalPages ? 'var(--color-text-muted)' : 'var(--color-text)', cursor: currentPage === processedData.totalPages ? 'not-allowed' : 'pointer' }}
                     >
@@ -354,11 +354,11 @@ const DashboardPage = () => {
                               {vuln.id}
                             </td>
                             <td style={{ padding: 'var(--spacing-2) var(--spacing-3)' }}>
-                              <span style={{ 
+                              <span style={{
                                 display: 'inline-block',
-                                padding: '2px 6px', 
-                                borderRadius: '3px', 
-                                backgroundColor: `${getSeverityColor(vuln.severity)}20`, 
+                                padding: '2px 6px',
+                                borderRadius: '3px',
+                                backgroundColor: `${getSeverityColor(vuln.severity)}20`,
                                 color: getSeverityColor(vuln.severity),
                                 fontWeight: 600,
                                 fontSize: '10px',
@@ -388,13 +388,13 @@ const DashboardPage = () => {
           </>
         ) : (
           <Section style={{ padding: 0 }} darker={false}>
-             <Card style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-4)' }}>
-                <div style={{ fontSize: '3rem', opacity: 0.5 }}>☁️</div>
-                <h3 style={{ color: 'var(--color-text)' }}>No active scans</h3>
-                <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '400px', fontSize: 'var(--font-size-sm)' }}>
-                  Select "GCP" from the Choose Provider dropdown in the navigation bar and hit the Scan button to run a comprehensive multi-service audit.
-                </p>
-             </Card>
+            <Card style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-4)' }}>
+              <div style={{ fontSize: '3rem', opacity: 0.5 }}>☁️</div>
+              <h3 style={{ color: 'var(--color-text)' }}>No active scans</h3>
+              <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '400px', fontSize: 'var(--font-size-sm)' }}>
+                Select "GCP" from the Choose Provider dropdown in the navigation bar and hit the Scan button to run a comprehensive multi-service audit.
+              </p>
+            </Card>
           </Section>
         )}
       </div>
@@ -405,8 +405,8 @@ const DashboardPage = () => {
           <div style={{ backgroundColor: '#1a1d2e', padding: 'var(--spacing-6)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '400px', border: '1px solid #2d3148', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
             <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--spacing-2)' }}>Email Report</h2>
             <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-4)' }}>Enter the recipient email address to receive the full PDF report.</p>
-            <input 
-              type="email" 
+            <input
+              type="email"
               value={emailInput}
               onChange={e => setEmailInput(e.target.value)}
               placeholder="recipient@example.com"
@@ -414,14 +414,14 @@ const DashboardPage = () => {
               autoFocus
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-3)' }}>
-              <button 
+              <button
                 onClick={() => setEmailModalOpen(false)}
                 disabled={reportStatus === 'sending'}
                 style={{ padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1', borderRadius: 'var(--radius-md)', cursor: reportStatus === 'sending' ? 'not-allowed' : 'pointer' }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleEmailReport}
                 disabled={!emailInput || reportStatus === 'sending'}
                 style={{ padding: '8px 16px', backgroundColor: '#06b6d4', border: 'none', color: '#fff', borderRadius: 'var(--radius-md)', cursor: (!emailInput || reportStatus === 'sending') ? 'not-allowed' : 'pointer', opacity: (!emailInput || reportStatus === 'sending') ? 0.6 : 1, display: 'flex', gap: '8px', alignItems: 'center' }}

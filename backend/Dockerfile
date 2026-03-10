@@ -14,8 +14,8 @@ ENV JWT_SECRET="super-secure-production-key"
 # Copy dependency definitions
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --omit=dev
+# Install dependencies (includes devDependencies for Prisma CLI)
+RUN npm install
 
 # Copy Prisma schema
 COPY prisma ./prisma/

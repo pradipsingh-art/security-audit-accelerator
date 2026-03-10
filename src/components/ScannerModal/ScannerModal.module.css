@@ -1,0 +1,248 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+}
+
+.modalContent {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.closeBtn {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.closeBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+.description {
+  padding: var(--spacing-4) var(--spacing-6) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.tabs {
+  display: flex;
+  padding: var(--spacing-4) var(--spacing-6) 0;
+  gap: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  padding: var(--spacing-2) var(--spacing-4);
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.activeTab {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tabContent {
+  padding: var(--spacing-6);
+}
+
+.dropZone {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-12) var(--spacing-4);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.dropZone:hover {
+  border-color: var(--color-primary);
+  background-color: rgba(0, 229, 255, 0.05);
+}
+
+.uploadIcon {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-4);
+}
+
+.fileName {
+  color: var(--color-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.dropText {
+  color: var(--color-text);
+  font-weight: 500;
+  margin-bottom: var(--spacing-1);
+}
+
+.dropSubtext {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.jsonTextarea {
+  width: 100%;
+  height: 200px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+  color: var(--color-success); /* Hacker matrix green for JSON feels pro */
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.jsonTextarea:focus {
+  border-color: var(--color-primary);
+}
+
+.errorMsg {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  padding: 0 var(--spacing-6);
+  margin-top: calc(var(--spacing-2) * -1);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Scanning Animation State */
+.scanningState {
+  padding: var(--spacing-16) var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.scannerRing {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid rgba(0, 229, 255, 0.1);
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-8);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.scanTitle {
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-2);
+}
+
+.scanSubtitle {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* AWS Form Styles */
+.awsForm {
+  padding: var(--spacing-4) var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.awsLabel {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.awsInput, .awsSelect {
+  width: 100%;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: rgba(0, 0, 0, 0.3);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.awsInput:focus, .awsSelect:focus {
+  border-color: var(--color-primary);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.awsSelect option {
+  background-color: #1a1d2e;
+  color: #f8fafc;
+  padding: var(--spacing-2);
+}

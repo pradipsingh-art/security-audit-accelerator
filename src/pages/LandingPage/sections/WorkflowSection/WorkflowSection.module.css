@@ -1,0 +1,73 @@
+.workflowGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+@media (min-width: 992px) {
+  .workflowGrid {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.stepCard {
+  position: relative;
+  flex: 1;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-8);
+  border-radius: var(--radius-lg);
+  z-index: 1;
+  text-align: center;
+  transition: transform var(--transition-base), border-color var(--transition-base);
+}
+
+.stepCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 229, 255, 0.4);
+}
+
+.stepNumber {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #000000;
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-6);
+  box-shadow: var(--shadow-glow);
+}
+
+.stepTitle {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-4);
+  color: var(--color-text);
+}
+
+.stepDescription {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* Connector Line Desktop */
+.connector {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .connector {
+    display: block;
+    position: absolute;
+    top: 64px; /* Align with middle of number circle */
+    right: calc(-50% + 32px); /* Half spacing to next card */
+    width: calc(100% - 64px); /* Full width minus circle size */
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-primary) 0%, rgba(0, 229, 255, 0) 100%);
+    z-index: -1;
+  }
+}

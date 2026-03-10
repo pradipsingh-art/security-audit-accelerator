@@ -1,0 +1,128 @@
+/**
+ * Audits GCP Compute Engine Virtual Machines for common security misconfigurations.
+ */
+const auditVMs = async (computeClient, projectClient, projectId) => {
+  const findings = [];
+  let scannedCount = 0;
+
+  try {
+    console.log(`[Compute Engine] Starting VM audit for project: ${projectId}`);
+    
+    // First check project-wide compute metadata settings
+    try {
+      const [projectResource] = await projectClient.get({ project: projectId });
+      const commonInstanceMetadata = projectResource.commonInstanceMetadata?.items || [];
+      
+      const blockSshKeys = commonInstanceMetadata.find(item => item.key === 'block-project-ssh-keys');
+      if (!blockSshKeys || blockSshKeys.value.toLowerCase() !== 'true') {
+        findings.push({
+          id: `GCP-VM-PROJ-SSH`,
+          severity: 'High',
+          resource: `Compute Engine (Project Level)`,
+          issue: `"Block Project-Wide SSH Keys" is NOT enabled.`,
+          remediation: `Enable block-project-ssh-keys at the project metadata level to prevent users from using legacy SSH keys across instances.`
+        });
+      }
+
+      const enableOslogin = commonInstanceMetadata.find(item => item.key === 'enable-oslogin');
+      if (!enableOslogin || enableOslogin.value.toLowerCase() !== 'true') {
+        findings.push({
+          id: `GCP-VM-PROJ-OSLOGIN`,
+          severity: 'Medium',
+          resource: `Compute Engine (Project Level)`,
+          issue: `OS Login is NOT enabled for the project.`,
+          remediation: `Enable OS Login to manage SSH access centrally through IAM policies rather than SSH keys.`
+        });
+      }
+    } catch (projectErr) {
+      console.warn("[Compute Engine] Failed to fetch project metadata:", projectErr.message);
+    }
+
+    // Iterate through all instances across all zones via aggregatedList
+    const instancesAggregated = await computeClient.aggregatedListAsync({ project: projectId });
+    for await (const [zone, instancesObject] of instancesAggregated) {
+      const instances = instancesObject.instances;
+      if (instances && instances.length > 0) {
+        for (const instance of instances) {
+          scannedCount++;
+          const instanceName = instance.name;
+
+          // Target 1: Public IP
+          let hasPublicIp = false;
+          if (instance.networkInterfaces) {
+            for (const iface of instance.networkInterfaces) {
+              if (iface.accessConfigs) {
+                for (const config of iface.accessConfigs) {
+                  if (config.natIP || config.type === 'ONE_TO_ONE_NAT') {
+                    hasPublicIp = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          if (hasPublicIp) {
+             findings.push({
+              id: `GCP-VM-PUBLIC-IP-${instanceName.substring(0, 8)}`,
+              severity: 'High',
+              resource: `Compute Instance (${instanceName})`,
+              issue: `Instance possesses a Public IP address.`,
+              remediation: `Remove external IP addresses and use Identity-Aware Proxy (IAP) or Cloud NAT for external communications.`
+            });
+          }
+
+          // Target 2: IP Forwarding
+          if (instance.canIpForward) {
+            findings.push({
+              id: `GCP-VM-IP-FWD-${instanceName.substring(0, 8)}`,
+              severity: 'High',
+              resource: `Compute Instance (${instanceName})`,
+              issue: `IP Forwarding is enabled.`,
+              remediation: `Disable IP Forwarding unless the instance strictly acts as a NAT gateway or router.`
+            });
+          }
+
+          // Target 3: Default Service Account Usage
+          // The default compute SA looks like `<project-number>-compute@developer.gserviceaccount.com`
+          if (instance.serviceAccounts && instance.serviceAccounts.length > 0) {
+            const saEmail = instance.serviceAccounts[0].email;
+            if (saEmail.includes('-compute@developer.gserviceaccount.com')) {
+               findings.push({
+                id: `GCP-VM-DEF-SA-${instanceName.substring(0, 8)}`,
+                severity: 'Medium',
+                resource: `Compute Instance (${instanceName})`,
+                issue: `Instance is configured to use the default Compute Engine service account.`,
+                remediation: `Create a dedicated, least-privilege service account specifically for this workload and assign it to the instance.`
+              });
+            }
+          }
+
+          // Target 4: Shielded VM
+          if (!instance.shieldedInstanceConfig || !instance.shieldedInstanceConfig.enableSecureBoot) {
+             findings.push({
+              id: `GCP-VM-SHIELDED-${instanceName.substring(0, 8)}`,
+              severity: 'Low', // Often Low/Medium depending on org risk tolerance
+              resource: `Compute Instance (${instanceName})`,
+              issue: `Secure Boot (Shielded VM) is NOT enabled.`,
+              remediation: `Launch instances with Shielded VM features enabled to prevent rootkits and boot-level malware.`
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      findings,
+      scannedCount
+    };
+
+  } catch (error) {
+    console.error("[Compute Engine] Error during VM audit:", error);
+    // Don't completely crash the master audit if one service fails (e.g., API not enabled)
+    return { findings: [], scannedCount: 0, error: error.message }; 
+  }
+};
+
+module.exports = {
+  auditVMs
+};

@@ -1,0 +1,120 @@
+.navbar {
+  height: 4.5rem;
+  /* Match sidebar header height */
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-6);
+  background-color: var(--color-bg);
+  /* Use pure background for contrast with sidebar */
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.mobileMenuToggle {
+  display: none;
+  cursor: pointer;
+  margin-right: var(--spacing-4);
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 1023px) {
+  .mobileMenuToggle {
+    display: block;
+  }
+}
+
+.navControls {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .navControls {
+    justify-content: space-between;
+  }
+}
+
+.controlGroup {
+  display: none;
+  /* Hide filter on small screens */
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+@media (min-width: 768px) {
+  .controlGroup {
+    display: flex;
+  }
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.selectFilter {
+  width: 250px;
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.selectProvider {
+  width: 180px;
+  display: none;
+  /* Hide on smallest screens */
+}
+
+@media (min-width: 640px) {
+  .selectProvider {
+    display: flex;
+    width: 200px;
+  }
+}
+
+.scanBtn {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .scanBtn {
+    display: inline-flex;
+    white-space: nowrap;
+  }
+}
+
+.userProfile {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--spacing-4);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  box-shadow: var(--shadow-glow);
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+}

@@ -1,0 +1,263 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
+
+const { initializeGcpClients } = require('./services/gcp/auth');
+const { auditStorageBuckets } = require('./services/gcp/auditors/storageAuditor');
+const { auditVMs } = require('./services/gcp/auditors/vmAuditor');
+const { auditIAM } = require('./services/gcp/auditors/iamAuditor');
+const { auditCloudSQL } = require('./services/gcp/auditors/sqlAuditor');
+const { auditNetworking } = require('./services/gcp/auditors/networkingAuditor');
+const { auditBigQuery } = require('./services/gcp/auditors/bigqueryAuditor');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-local-key-for-jwt';
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+const path = require('path');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+// Routes
+const authRoutes = require('./routes/auth');
+const projectRoutes = require('./routes/projects');
+const reportRoutes = require('./routes/reports');
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/reports', reportRoutes);
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Security Audit API is running.' });
+});
+
+// Middleware to protect routes and extract user
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
+    req.user = user;
+    next();
+  });
+};
+
+// GCP Comprehensive Scan Route
+app.post('/api/scan/gcp', authenticateToken, upload.single('file'), async (req, res) => {
+  console.log("--- Received COMPREHENSIVE LIVE GCP Scan Request ---");
+
+  let credentials = null;
+
+  try {
+    if (req.file) {
+      credentials = JSON.parse(req.file.buffer.toString('utf8'));
+    } else if (req.body && req.body.credentials) {
+      credentials = JSON.parse(req.body.credentials);
+    } else {
+      return res.status(400).json({ error: "Missing GCP credentials (file or JSON body required)." });
+    }
+
+    const clients = initializeGcpClients(credentials);
+    const gcpProjectId = clients.projectId;
+
+    console.log(`[Engine] Beginning comprehensive audit for Project: ${gcpProjectId}`);
+
+    // Execute all auditors concurrently
+    const auditPromises = [
+      auditStorageBuckets(clients.storageClient, gcpProjectId),
+      auditVMs(clients.computeClient, clients.projectClient, gcpProjectId),
+      auditIAM(clients.googleAuthClient, gcpProjectId),
+      auditCloudSQL(clients.googleAuthClient, gcpProjectId),
+      auditNetworking(clients.networksClient, clients.firewallsClient, gcpProjectId),
+      auditBigQuery(clients.bigQueryClient, gcpProjectId)
+    ];
+
+    const results = await Promise.allSettled(auditPromises);
+
+    // Consolidate findings from successfully resolved auditor promises
+    let allFindings = [];
+    let totalScanned = 0;
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        allFindings = allFindings.concat(result.value.findings || []);
+        totalScanned += (result.value.scannedCount || 0);
+      } else {
+        console.error(`[Engine] Auditor at index ${index} completely failed:`, result.reason);
+      }
+    });
+
+    // Calculate dynamic security score based on percentage of healthy resources
+    const criticalCount = allFindings.filter(f => f.severity === 'Critical').length;
+    const highCount = allFindings.filter(f => f.severity === 'High').length;
+    const mediumCount = allFindings.filter(f => f.severity === 'Medium').length;
+
+    // Calculate the number of unique resources that have vulnerabilities
+    const uniqueVulnerableResources = new Set(allFindings.map(f => f.resource)).size;
+
+    // Score represents the percentage of completely healthy resources
+    let computedScore = 100;
+    if (totalScanned > 0) {
+      computedScore = Math.round(((totalScanned - uniqueVulnerableResources) / totalScanned) * 100);
+      computedScore = Math.max(0, computedScore);
+    }
+
+    // --- DATABASE PERSISTENCE ---
+    const projectName = gcpProjectId || 'GCP Project';
+
+    let project = await prisma.project.findFirst({
+      where: { name: projectName, userId: req.user.userId, provider: 'gcp' }
+    });
+
+    if (!project) {
+      project = await prisma.project.create({
+        data: { name: projectName, provider: 'gcp', userId: req.user.userId }
+      });
+    }
+
+    const scanRecord = await prisma.scanHistory.create({
+      data: {
+        score: computedScore,
+        scannedResources: totalScanned,
+        criticalCount,
+        highCount,
+        mediumCount,
+        findings: JSON.stringify(allFindings),
+        projectId: project.id
+      }
+    });
+
+    const liveResults = {
+      success: true,
+      projectId: gcpProjectId,
+      dbScanId: scanRecord.id,
+      summary: {
+        score: computedScore,
+        scannedResources: totalScanned,
+        critical: criticalCount,
+        high: highCount,
+        medium: mediumCount
+      },
+      vulnerabilities: allFindings
+    };
+
+    console.log(`[Engine] Scan complete. Saved to DB (Scan ID: ${scanRecord.id}).`);
+    res.status(200).json(liveResults);
+
+  } catch (error) {
+    console.error("[Engine] Scanner crashed:", error);
+    res.status(500).json({ error: error.message || "Internal server error during GCP scan." });
+  }
+});
+
+// AWS Comprehensive Scan Route
+const { auditAwsIam, auditAwsEc2, auditAwsS3 } = require('./services/awsScanner');
+
+app.post('/api/scan/aws', authenticateToken, async (req, res) => {
+  console.log("--- Received COMPREHENSIVE LIVE AWS Scan Request ---");
+
+  try {
+    const { accessKeyId, secretAccessKey, region } = req.body;
+
+    if (!accessKeyId || !secretAccessKey) {
+      return res.status(400).json({ error: "Missing AWS credentials (accessKeyId, secretAccessKey required)." });
+    }
+
+    const credentials = { accessKeyId, secretAccessKey, region: region || 'us-east-1' };
+    const maskedKeyId = accessKeyId.substring(0, 4) + '...';
+    console.log(`[Engine] Beginning comprehensive AWS audit for Access Key: ${maskedKeyId}`);
+
+    // Execute all auditors concurrently
+    const auditPromises = [
+      auditAwsIam(credentials),
+      auditAwsEc2(credentials),
+      auditAwsS3(credentials)
+    ];
+
+    const results = await Promise.allSettled(auditPromises);
+
+    let allFindings = [];
+    let totalScanned = 0;
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        allFindings = allFindings.concat(result.value.findings || []);
+        totalScanned += (result.value.scannedCount || 0);
+      } else {
+        console.error(`[Engine] AWS Auditor at index ${index} failed:`, result.reason);
+      }
+    });
+
+    const criticalCount = allFindings.filter(f => f.severity === 'Critical').length;
+    const highCount = allFindings.filter(f => f.severity === 'High').length;
+    const mediumCount = allFindings.filter(f => f.severity === 'Medium').length;
+
+    const uniqueVulnerableResources = new Set(allFindings.map(f => f.resource)).size;
+
+    let computedScore = 100;
+    if (totalScanned > 0) {
+      computedScore = Math.round(((totalScanned - uniqueVulnerableResources) / totalScanned) * 100);
+      computedScore = Math.max(0, computedScore);
+    }
+
+    // --- DATABASE PERSISTENCE ---
+    const projectName = `AWS Project (${maskedKeyId})`;
+
+    let project = await prisma.project.findFirst({
+      where: { name: projectName, userId: req.user.userId, provider: 'aws' }
+    });
+
+    if (!project) {
+      project = await prisma.project.create({
+        data: { name: projectName, provider: 'aws', userId: req.user.userId }
+      });
+    }
+
+    const scanRecord = await prisma.scanHistory.create({
+      data: {
+        score: computedScore,
+        scannedResources: totalScanned,
+        criticalCount,
+        highCount,
+        mediumCount,
+        findings: JSON.stringify(allFindings),
+        projectId: project.id
+      }
+    });
+
+    const liveResults = {
+      success: true,
+      projectId: projectName,
+      provider: 'AWS',
+      summary: {
+        score: computedScore,
+        scannedResources: totalScanned,
+        vulnerableCount: uniqueVulnerableResources,
+      },
+      vulnerabilities: allFindings
+    };
+
+    res.json(liveResults);
+
+  } catch (error) {
+    console.error("[Engine] AWS Scanner crashed:", error);
+    res.status(500).json({ error: error.message || "Internal server error during AWS scan." });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});

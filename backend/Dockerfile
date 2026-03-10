@@ -32,6 +32,8 @@ COPY . .
 # Expose port (Cloud Run defaults to 8080)
 EXPOSE 8080
 ENV PORT=8080
+# Give Node.js more heap memory for heavy GCP/AWS scanning
+ENV NODE_OPTIONS="--max-old-space-size=768"
 
 # Command to run the application
 CMD [ "node", "server.js" ]

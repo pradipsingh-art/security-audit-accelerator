@@ -41,18 +41,28 @@ if (process.env.K_SERVICE) {
   prisma = new PrismaClient();
 }
 
-// Middleware - Configure CORS for Cloud Run
-app.use(cors({
-  origin: [
+// Middleware - Manual CORS for Cloud Run (bulletproof)
+app.use((req, res, next) => {
+  const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:3000',
     'https://security-audit-accelerator-frontend-196053730058.asia-south1.run.app'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-app.options('*', cors()); // Handle preflight requests
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(express.json());
 
 const storage = multer.memoryStorage();

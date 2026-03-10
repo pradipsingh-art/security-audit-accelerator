@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const path = require('path');
 
 const { initializeGcpClients } = require('./services/gcp/auth');
 const { auditStorageBuckets } = require('./services/gcp/auditors/storageAuditor');
@@ -43,7 +44,6 @@ if (process.env.K_SERVICE) {
 // Middleware
 app.use(cors());
 app.use(express.json());
-const path = require('path');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });

@@ -258,6 +258,18 @@ app.post('/api/scan/aws', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log('Successfully connected to the database.');
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('CRITICAL STARTUP ERROR:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

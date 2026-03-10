@@ -15,8 +15,7 @@ const Sidebar = () => {
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
         <a href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>🛡️</span>
-          <span className="text-gradient">AuditScope</span>
+          <img src="/assets/logo.png" alt="Logo" className={styles.logoImg} />
         </a>
       </div>
 
@@ -24,11 +23,11 @@ const Sidebar = () => {
         <ul className={styles.navList}>
           {navItems.map((item, index) => {
             const isActive = currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/dashboard');
-            
+
             return (
               <li key={index} className={styles.navItem}>
-                <a 
-                  href={item.path} 
+                <a
+                  href={item.path}
                   className={`${styles.navLink} ${isActive ? styles.active : ''}`}
                 >
                   <span className={styles.icon}>{item.icon}</span>

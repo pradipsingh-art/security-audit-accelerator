@@ -8,11 +8,10 @@ const Header = () => {
       <div className={`container ${styles.headerContent}`}>
         <div className={styles.logo}>
           <a href="/">
-            <span className={styles.logoIcon}>🛡️</span>
-            <span className="text-gradient">AuditScope</span>
+            <img src="/assets/logo.png" alt="Logo" className={styles.logoImg} />
           </a>
         </div>
-        
+
         <nav className={styles.nav}>
           <ul className={styles.navList}>
             <li><a href="#features" className={styles.navLink}>Features</a></li>

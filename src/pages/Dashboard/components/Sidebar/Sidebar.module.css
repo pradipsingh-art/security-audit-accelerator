@@ -20,11 +20,13 @@
 }
 
 .sidebarHeader {
-  height: 4.5rem; /* Match general header height */
+  height: 4.5rem;
+  /* Match general header height */
   display: flex;
   align-items: center;
   padding: 0 var(--spacing-6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Very subtle bottom border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Very subtle bottom border */
 }
 
 .logo {
@@ -36,8 +38,10 @@
   text-decoration: none;
 }
 
-.logoIcon {
-  font-size: 1.5rem;
+.logoImg {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
 .navContainer {
@@ -50,9 +54,11 @@
 .navContainer::-webkit-scrollbar {
   width: 4px;
 }
+
 .navContainer::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .navContainer::-webkit-scrollbar-thumb {
   background-color: var(--color-border);
   border-radius: var(--radius-full);
@@ -61,7 +67,8 @@
 .navList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1); /* Tight gap between items */
+  gap: var(--spacing-1);
+  /* Tight gap between items */
 }
 
 .navItem {
@@ -89,7 +96,8 @@
   background-color: rgba(0, 229, 255, 0.1);
   color: var(--color-primary);
   border-left: 3px solid var(--color-primary);
-  padding-left: calc(var(--spacing-4) - 3px); /* Compensate for border */
+  padding-left: calc(var(--spacing-4) - 3px);
+  /* Compensate for border */
 }
 
 .icon {

@@ -9,8 +9,7 @@ const Footer = () => {
       <div className={`container ${styles.footerContent}`}>
         <div className={styles.brandColumn}>
           <div className={styles.logo}>
-            <span className={styles.logoIcon}>🛡️</span>
-            <span className="text-gradient">AuditScope</span>
+            <img src="/assets/logo.png" alt="Logo" className={styles.logoImg} />
           </div>
           <p className={styles.description}>
             The leading enterprise auditing tool for multi-cloud security and compliance.
@@ -47,9 +46,9 @@ const Footer = () => {
           </ul>
         </div>
       </div>
-      
+
       <div className={`container ${styles.footerBottom}`}>
-        <p>&copy; {currentYear} Cloud AuditScope. All rights reserved.</p>
+        <p>&copy; {currentYear} Cloud Ambassadors. All rights reserved.</p>
       </div>
     </footer>
   );

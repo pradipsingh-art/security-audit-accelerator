@@ -15,8 +15,30 @@ const { auditBigQuery } = require('./services/gcp/auditors/bigqueryAuditor');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-local-key-for-jwt';
+
+// Initialize Prisma
+let prisma;
+if (process.env.K_SERVICE) {
+  // Cloud Run is read-only, so we must copy the SQLite DB to the writable /tmp mount
+  const os = require('os');
+  const fs = require('fs');
+  const tmpDbPath = path.join(os.tmpdir(), 'dev.db');
+  const bundledDbPath = path.join(__dirname, 'prisma', 'dev.db');
+
+  if (!fs.existsSync(tmpDbPath) && fs.existsSync(bundledDbPath)) {
+    fs.copyFileSync(bundledDbPath, tmpDbPath);
+    console.log('[Startup] Copied DB to writable mount:', tmpDbPath);
+  }
+
+  prisma = new PrismaClient({
+    datasources: {
+      db: { url: `file:${tmpDbPath}` }
+    }
+  });
+} else {
+  prisma = new PrismaClient();
+}
 
 // Middleware
 app.use(cors());
